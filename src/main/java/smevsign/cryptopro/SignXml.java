@@ -4,6 +4,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import smevsign.smev.Utils;
@@ -52,6 +53,18 @@ public class SignXml {
         return null;
     }
 
+    private String getRefId(String node) {
+        Element element = Utils.getElementFromXmlString(node);
+        if (element == null) {
+            return null;
+        }
+        String refId = element.getAttribute("Id");
+        if (refId == null || refId.isEmpty()) {
+            return null;
+        }
+        return refId;
+    }
+
     public DigestValue getDigest(String node, String algorithm) {
         CryptoAlgorithm cryptoAlgorithm = null;
         try {
@@ -68,8 +81,13 @@ public class SignXml {
 
         byte[] nodeDigest = nodeDigest(normalizedTargetNode, cryptoAlgorithm.digestAlgorithm.name, "DIGEST");
 
+        String refId = getRefId(node);
+        if (refId == null) {
+            System.out.println("[ERROR] PersonalSignature: attribute Id not found");
+            return null;
+        }
         SignedInfo signedInfo = new SignedInfo(cryptoAlgorithm.signatureMethod);
-        signedInfo.setReference("PERSONAL_SIGNATURE", nodeDigest, cryptoAlgorithm.digestMethod);
+        signedInfo.setReference(refId, nodeDigest, cryptoAlgorithm.digestMethod);
 
         Node signedInfoNode = Utils.getElementFromClass(signedInfo);
         byte[] normalizedSignedInfoNode = transform.makeC14nTransform(signedInfoNode);
