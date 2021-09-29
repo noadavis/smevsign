@@ -1,17 +1,19 @@
 package smevsign.support;
 
-import com.google.gson.JsonArray;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.google.gson.annotations.SerializedName;
 
 public class SettingsOptions {
-    public String xmlScheme = null;
+    @SerializedName(value = "xml_scheme")
+    public String xmlScheme = "1.1";
+    @SerializedName(value = "data_type")
     public String dataType = null;
+    @SerializedName(value = "sign_type")
     public String signType = null;
     public String uuid = null;
-    public String path = null;
-    public List<String> files = new ArrayList<String>();
-    public boolean signature_detached = true;
+    @SerializedName(value = "signature_detached")
+    public boolean signatureDetached = true;
+    @SerializedName(value = "zip_name")
     public String zipName = null;
+    @SerializedName(value = "ftp_upload")
+    public boolean ftpUpload = true;
 }

@@ -32,8 +32,23 @@ $ ~/tomcat/bin/catalina.sh start
     "data_type": "",
     "sign_type": "",
     "uuid": "",
-    "xml_scheme": "1.1"
-  }
+    "xml_scheme": "1.1",
+    "ftp_upload": true
+  },
+  "files": [ 
+    { 
+      "ftp_path": "uuid", 
+      "content_id": "uuid", 
+      "file_path": "/mnt/storage/", 
+      "file_name": "Test1.pdf"
+    }, 
+    { 
+      "ftp_path": "uuid", 
+      "content_id": "uuid", 
+      "file_path": "/mnt/storage/", 
+      "file_name": "Test2.pdf" 
+    }
+  ]
 }
 
 #Подпись файла
@@ -43,9 +58,14 @@ $ ~/tomcat/bin/catalina.sh start
   "options": {
     "zip_name": "SignedContent.zip",
     "path": "/home/dev/files",
-    "files": [],
     "signature_detached": true
-  }
+  },
+  "files": [
+    { 
+      "file_path": "/mnt/storage/", 
+      "file_name": "Test1.pdf"
+     }
+  ]
 }
 ```
 ```bash
@@ -57,6 +77,9 @@ sign_type: create / sign
 data: base64 строка
 files: файлы для подписи в директории path, указывать не обязательно
 signature_detached: прикрепленная / открепленная подпись, true - если не указано
+ftp_upload: загрузка прикрепленных файлов на фтп, или в xml [true / false]
+ftp_path: фтп директория загрузки, только для ftp_upload - true
+content_id: идентификатор вложения, только для ftp_upload - false
 ```
 Примеры запросов к сервису [api.txt](api.txt)
 

@@ -77,6 +77,9 @@ public class ContainerService {
                 }
             }
         } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException | NoSuchProviderException e) {
+            if (e.getMessage().contains("ASN.1 decode error")) {
+                log.error("[ASN.1 decode error] может означать проблему контейнера с ЭЦП, проверьте присутствие и размер файлов в /var/opt/cprocsp/keys/");
+            }
             log.error("", e);
         }
     }

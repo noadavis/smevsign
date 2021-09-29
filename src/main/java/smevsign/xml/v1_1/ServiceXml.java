@@ -1,17 +1,28 @@
 package smevsign.xml.v1_1;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tika.Tika;
 import org.w3c.dom.Element;
+import smevsign.cryptopro.SignFile;
 import smevsign.cryptopro.SignValues;
 import smevsign.cryptopro.SignXml;
 import smevsign.smev.Utils;
 import smevsign.smev.signature.Signature;
 import smevsign.smev.v1_1.*;
+import smevsign.support.AttachmentInfo;
 import smevsign.support.ContainerConfig;
 import smevsign.support.Settings;
 import smevsign.xml.AbstractXmlBuilder;
+
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class ServiceXml extends AbstractXmlBuilder {
     final private String className = this.getClass().getSimpleName();
@@ -135,7 +146,10 @@ public class ServiceXml extends AbstractXmlBuilder {
                 "urn://x-artefacts-smev-gov-ru/services/message-exchange/types/1.1"
         );
 
+        boolean needCheckXmlSize = false;
         String serviceXml = this.settings.getData();
+        boolean testMessage = true;
+        String frguCode = "0000000000000000000";
         //String messageId = Utils.generateUuid1();
         String messageId = this.settings.getUuid();
         if (messageId == null) {
@@ -143,22 +157,13 @@ public class ServiceXml extends AbstractXmlBuilder {
             setXml(null);
         }
 
-
-
-        //--------------------------------------
-        //Запрос к эмулятору смев?
-        boolean testMessage = true;
-        //фргу код?
-        String frguCode = "0000000000000000000";
-        //--------------------------------------
-
-
-
         SendRequestRequest sendReq = new SendRequestRequest();
         SenderProvidedRequestData reqData = new SenderProvidedRequestData();
         reqData.setId(signValues.getReferenceId());
         reqData.setMessageID(messageId);
         reqData.setReferenceMessageID(messageId);
+
+        //MessagePrimaryContent
         MessagePrimaryContent msgContent = new MessagePrimaryContent();
         Element any = Utils.getElementFromXmlString(serviceXml);
         if (any == null) {
@@ -166,20 +171,83 @@ public class ServiceXml extends AbstractXmlBuilder {
             return;
         }
         msgContent.setAny(any);
-        SenderProvidedRequestData.BusinessProcessMetadata metaData = new SenderProvidedRequestData.BusinessProcessMetadata();
+        reqData.setMessagePrimaryContent(msgContent);
 
+        //files
+        List<AttachmentInfo> files = settings.getFiles();
+        if (files.size() > 0) {
+            RefAttachmentHeaderList refAttachmentHeaderList = new RefAttachmentHeaderList();
+            AttachmentHeaderList attachmentHeaderList = new AttachmentHeaderList();
+            AttachmentContentList attachmentContentList = new AttachmentContentList();
+            Tika tika = new Tika();
+            SignFile sf = new SignFile(this.container, this.debug);
+            try {
+                for (AttachmentInfo file : files) {
+                    File f = new File(String.format("%s%s", file.filePath, file.fileName));
+                    if (f.exists()) {
+                        sf.GeneratePkcs7(file, f);
+                        if (file.pkcs7 != null) {
+                            String mimeType = tika.detect(f);
+                            if (settings.options.ftpUpload) {
+                                RefAttachmentHeaderType refAttachmentHeaderType = new RefAttachmentHeaderType();
+                                refAttachmentHeaderType.setUuid(file.ftpPath);
+                                refAttachmentHeaderType.setMimeType(mimeType);
+                                refAttachmentHeaderType.setHash(file.digest);
+                                refAttachmentHeaderType.setSignaturePKCS7(file.pkcs7);
+                                refAttachmentHeaderList.getRefAttachmentHeader().add(refAttachmentHeaderType);
+                            } else {
+                                AttachmentHeaderType attachmentHeaderType = new AttachmentHeaderType();
+                                attachmentHeaderType.setContentId(file.contentId);
+                                attachmentHeaderType.setMimeType(tika.detect(f));
+                                attachmentHeaderType.setSignaturePKCS7(file.pkcs7);
+                                attachmentHeaderList.getAttachmentHeader().add(attachmentHeaderType);
+
+                                AttachmentContentType attachmentContentType = new AttachmentContentType();
+                                attachmentContentType.setId(file.contentId);
+                                DataSource ds = new FileDataSource(f.getAbsolutePath());
+                                DataHandler handler = new DataHandler(ds);
+                                attachmentContentType.setContent(handler);
+                                attachmentContentList.getAttachmentContent().add(attachmentContentType);
+                            }
+                        }
+                    } else {
+                        setError(String.format("file not found: %s", file.fileName), log);
+                        setXml(null);
+                        return;
+                    }
+                }
+            } catch (IOException ex) {
+                setError(ex.getMessage(), log);
+                setXml(null);
+                return;
+            }
+            if (settings.options.ftpUpload) {
+                if (refAttachmentHeaderList.getRefAttachmentHeader().size() > 0) {
+                    reqData.setRefAttachmentHeaderList(refAttachmentHeaderList);
+                }
+            } else {
+                if (attachmentHeaderList.getAttachmentHeader().size() > 0) {
+                    needCheckXmlSize = true;
+                    reqData.setAttachmentHeaderList(attachmentHeaderList);
+                    sendReq.setAttachmentContentList(attachmentContentList);
+                }
+            }
+        }
+
+        //BusinessProcessMetadata
         if (frguCode != null) {
+            SenderProvidedRequestData.BusinessProcessMetadata metaData = new SenderProvidedRequestData.BusinessProcessMetadata();
             String frgeNode = String.format("<fr:frgu xmlns:fr=\"urn://x-artefacts-smev-gov-ru/services/message-exchange/business-process-metadata/1.0\">%s</fr:frgu>", frguCode);
             Element anyMeta = Utils.getElementFromXmlString(frgeNode);
             metaData.getAny().add(0, anyMeta);
             reqData.setBusinessProcessMetadata(metaData);
         }
 
+        //smev emulator key
         if (testMessage) {
             reqData.setTestMessage(new smevsign.smev.v1_1.Void());
         }
 
-        reqData.setMessagePrimaryContent(msgContent);
         sendReq.setSenderProvidedRequestData(reqData);
 
         XMLDSigSignatureType dSign = new XMLDSigSignatureType();
@@ -190,6 +258,13 @@ public class ServiceXml extends AbstractXmlBuilder {
         if (signature != null) {
             dSign.setAny(Utils.getElementFromClass(signature));
             setXml(Utils.convertJAXBObjectToXml(sendReq, "smevsign.smev.v1_1.SendRequestRequest", null));
+            if (needCheckXmlSize) {
+                if (getXml().getBytes(StandardCharsets.UTF_8).length > 5 * 1024 * 1000) {
+                    //smev xml size > 5mb
+                    setError("[BUILD SENDREQUESTREQUEST] xml is too big", log);
+                    setXml(null);
+                }
+            }
         } else {
             setError("[BUILD SENDREQUESTREQUEST] sign not created", log);
             setXml(null);

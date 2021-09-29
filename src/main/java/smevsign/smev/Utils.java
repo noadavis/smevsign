@@ -34,6 +34,11 @@ public class Utils {
         return uuid1.toString();
     }
 
+    public static String generateUuid4() {
+        UUID uuid4 = Generators.randomBasedGenerator().generate();
+        return uuid4.toString();
+    }
+
     public static XMLGregorianCalendar getXMLGregorianCalendarNow() {
         try {
             GregorianCalendar gregorianCalendar = new GregorianCalendar();

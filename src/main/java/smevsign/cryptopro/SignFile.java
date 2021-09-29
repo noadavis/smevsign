@@ -1,7 +1,9 @@
 package smevsign.cryptopro;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import smevsign.support.AttachmentInfo;
 import smevsign.support.ContainerConfig;
 import smevsign.support.Settings;
 import smevsign.xml.AbstractXmlBuilder;
@@ -25,141 +27,132 @@ public class SignFile extends AbstractXmlBuilder {
     private final Settings settings;
     private final boolean debug;
     private final ContainerConfig container;
+    private ContainerService cs = null;
+    private CMS cms = null;
+    private Digest digest = null;
 
     public SignFile(Settings jsonInputSettings, ContainerConfig container, boolean debug) {
         this.settings = jsonInputSettings;
         this.container = container;
         this.debug = debug;
 
-        SignFiles();
+        SignPrepare(this.settings.options.signatureDetached);
+
+        GenerateSig();
     }
 
-    private void SignFiles() {
-        log.info(settings.options.path);
-        if ((settings.options.path != null) && (!"".equals(settings.options.path))) {
+    public SignFile(ContainerConfig container, boolean debug) {
+        this.settings = null;
+        this.container = container;
+        this.debug = debug;
+        this.digest = new Digest();
 
-            ContainerService cs = new ContainerService(container.alias, container.password);
-            if (!cs.isCertificateDateValid()) {
-                setError(String.format("[SIGN][%s] certificate date not valid", container.alias), log);
-                return;
-            }
-            CMS cms = new CMS(settings.options.signature_detached, cs.getCertificate());
+        SignPrepare(true);
+    }
 
-            List<String> signedFiles = new ArrayList<String>();
-            boolean signError = false;
+    public void GeneratePkcs7(AttachmentInfo file, File f) {
+        byte[] attachmentDigest = digest.fileDigest(f, cs.getCryptoAlgorithm().digestAlgorithm.name);
+        file.digest = Base64.encodeBase64String(attachmentDigest);
+        file.pkcs7 = signFile(f, false);
+    }
 
-            if (settings.options.files.size() > 0) {
-                log.info("work with files in array");
-                for (String fn : settings.options.files) {
-                    File f = new File(String.format("%s%s", settings.options.path, fn));
+    private void GenerateSig() {
+        List<AttachmentInfo> signedFiles = new ArrayList<AttachmentInfo>();
+        List<AttachmentInfo> files = settings.getFiles();
+        boolean signError = false;
+
+        if (files.size() > 0) {
+            try {
+                for (AttachmentInfo file : files) {
+                    File f = new File(String.format("%s%s", file.filePath, file.fileName));
                     if (f.exists()) {
-                        String signedFile = signFile(cs, cms, f);
-                        if (signedFile != null) {
-                            signedFiles.add(signedFile);
-                            if (settings.options.signature_detached) {
-                                signedFiles.add(f.getName());
+                        byte[] pkcs7 = signFile(f, true);
+                        if (pkcs7 != null) {
+                            Array.writeFile(String.format("%s.sig", f.getPath()), pkcs7);
+                            signedFiles.add(new AttachmentInfo(null, file.filePath, String.format("%s.sig", file.fileName)));
+                            if (settings.options.signatureDetached) {
+                                signedFiles.add(new AttachmentInfo(null, file.filePath, file.fileName));
                             }
                         } else {
                             signError = true;
                             break;
                         }
-                    }else {
-                        setError("file not exist", log);
+                    } else {
+                        setError(String.format("file not exist: %s", file.fileName), log);
                     }
                 }
-            } else {
-                log.info("work with all files in path");
-                File folder = new File(settings.options.path);
-                File[] files = folder.listFiles();
-                if (files != null) {
-                    for (File f : files) {
-                        String signedFile = signFile(cs, cms, f);
-                        if (signedFile != null) {
-                            signedFiles.add(signedFile);
-                            if (settings.options.signature_detached) {
-                                signedFiles.add(f.getName());
-                            }
-                        } else {
-                            signError = true;
-                            break;
-                        }
-                    }
-                } else {
-                    setError("path is empty", log);
-                }
+            } catch (IOException e) {
+                setError(e.getMessage(), log);
             }
+        }
 
-            if (!signError) {
-                if (signedFiles.size() > 0 && settings.options.zipName != null) {
-                    try {
-                        zipSignedFiles(signedFiles, settings.options.path);
-                    } catch (IOException e) {
-                        setError(e.getMessage(), log);
-                    }
-                }
-                if (!getError()) {
-                    setXml("signed");
-                }
+        if (!signError) {
+            try {
+                zipSignedFiles(signedFiles);
+            } catch (IOException e) {
+                setError(e.getMessage(), log);
             }
-
-        } else {
-            setError("path is empty", log);
+            if (!getError()) {
+                setXml("signed");
+            }
         }
     }
 
-
-
-    private String signFile(ContainerService cs, CMS cms, File f) {
+    private byte[] signFile(File f, boolean writeSig) {
         try {
             final byte[] data = Array.readFile(f.getPath());
-            final PrivateKey key = cs.getPrivateKey();
+            final PrivateKey key = this.cs.getPrivateKey();
 
-            final Signature signature = Signature.getInstance(cs.getCryptoAlgorithm().signatureAlgorithm.name, "JCP");
+            final Signature signature = Signature.getInstance(this.cs.getCryptoAlgorithm().signatureAlgorithm.name, "JCP");
             signature.initSign(key);
             signature.update(data);
             final byte[] sign = signature.sign();
 
-            byte[] fileSignature = cms.createCMS(
+            return this.cms.createCMS(
                     data,
                     sign,
-                    cs.getCryptoAlgorithm().digestAlgorithm.oid,
-                    cs.getCryptoAlgorithm().signatureAlgorithm.oid
+                    this.cs.getCryptoAlgorithm().digestAlgorithm.oid,
+                    this.cs.getCryptoAlgorithm().signatureAlgorithm.oid
             );
 
-            if (fileSignature != null) {
-                Array.writeFile(String.format("%s.sig", f.getPath()), fileSignature);
-                return String.format("%s.sig", f.getName());
-            }
         } catch (Exception e) {
             setError(e.getMessage(), log);
         }
         return null;
     }
 
-
-    private void zipSignedFiles(List<String> signedFiles, String path) throws IOException {
-        FileOutputStream fos = new FileOutputStream(String.format("%s%s", path, settings.options.zipName));
-        //log.info(String.format("%s%s", path, settings.options.zipName));
+    private void zipSignedFiles(List<AttachmentInfo> signedFiles) throws IOException {
+        if (signedFiles.size() == 0 || settings.options.zipName == null) {
+            return;
+        }
+        FileOutputStream fos = new FileOutputStream(String.format("%s%s", signedFiles.get(0).filePath, settings.options.zipName));
+        if (debug) {
+            log.info(String.format("%s%s", signedFiles.get(0).filePath, settings.options.zipName));
+        }
         ZipOutputStream zipOut = new ZipOutputStream(fos);
-        for (String signedFile : signedFiles) {
-            //log.info(String.format("%s%s", path, signedFile));
-            if (!signedFile.equals(settings.options.zipName)) {
-                File fileToZip = new File(String.format("%s%s", path, signedFile));
-                FileInputStream fis = new FileInputStream(fileToZip);
-                ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
-                zipOut.putNextEntry(zipEntry);
-
-                byte[] bytes = new byte[10240];
-                int length;
-                while ((length = fis.read(bytes)) >= 0) {
-                    zipOut.write(bytes, 0, length);
-                }
-                fis.close();
+        for (AttachmentInfo signedFile : signedFiles) {
+            File fileToZip = new File(String.format("%s%s", signedFile.filePath, signedFile.fileName));
+            FileInputStream fis = new FileInputStream(fileToZip);
+            ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
+            zipOut.putNextEntry(zipEntry);
+            byte[] bytes = new byte[10240];
+            int length;
+            while ((length = fis.read(bytes)) >= 0) {
+                zipOut.write(bytes, 0, length);
             }
+            fis.close();
         }
         zipOut.close();
         fos.close();
     }
 
+    private void SignPrepare(boolean signatureDetached) {
+        this.cs = new ContainerService(container.alias, container.password);
+        if (!this.cs.isCertificateDateValid()) {
+            setError(String.format("[SIGN][%s] certificate date not valid", container.alias), log);
+            return;
+        }
+        this.cms = new CMS(signatureDetached, cs.getCertificate());
+    }
 
 }

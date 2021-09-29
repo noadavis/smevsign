@@ -1,6 +1,21 @@
 package smevsign.support;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class Settings {
+    @SerializedName(value = "request_type")
+    public String requestType = "";
+    public String data = "";
+    @SerializedName(value = "sign_alias")
+    public String signAlias = null;
+    public SettingsOptions options = new SettingsOptions();
+    public List<AttachmentInfo> files = null;
+
     public String getRequestType() {
         return requestType;
     }
@@ -28,9 +43,36 @@ public class Settings {
     public String getSignAlias() {
         return signAlias;
     }
-    //"sign_xml", "sign_file", "sign_string", "queue_xml", "ack_xml"
-    public String requestType = "";
-    public String data = "";
-    public String signAlias = null;
-    public SettingsOptions options = new SettingsOptions();
+    public void generateContentId() {
+        List<AttachmentInfo> files = getFiles();
+        if (files.size() > 0) {
+            for (AttachmentInfo file : files) {
+                file.generateContentId();
+            }
+        }
+    }
+    public boolean checkContentId() {
+        List<AttachmentInfo> files = getFiles();
+        if (files.size() > 0) {
+            for (AttachmentInfo file : files) {
+                if (file.contentId == null) {
+                    return false;
+                    //file.generateContentId();
+                }
+            }
+        }
+        return true;
+    }
+    public List<AttachmentInfo> getFiles() {
+        if (files == null) {
+            files = new ArrayList<AttachmentInfo>();
+        }
+        return files;
+    }
+
+    public String toString() {
+        Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+        return gson.toJson(this);
+    }
+
 }

@@ -29,7 +29,7 @@ public class CMS {
     }
 
 
-    public byte[] createCMS(byte[] buffer, byte[] sign, String digestOid,  String signOid) throws Exception {
+    public byte[] createCMS(byte[] buffer, byte[] sign, String digestOid, String signOid) throws Exception {
 
         final ContentInfo all = new ContentInfo();
         all.contentType = new Asn1ObjectIdentifier(new OID(STR_CMS_OID_SIGNED).value);
