@@ -62,6 +62,10 @@ public class QueueXml extends AbstractXmlBuilder {
         MessageTypeSelector typeSelector = new MessageTypeSelector();
         typeSelector.setId(this.signValues.getReferenceId());
         typeSelector.setTimestamp(Utils.getXMLGregorianCalendarNow());
+        if (settings.options.rootElement != null && settings.options.namespace != null) {
+            typeSelector.setRootElementLocalName(settings.options.rootElement);
+            typeSelector.setNamespaceURI(settings.options.namespace);
+        }
         getReq.setMessageTypeSelector(typeSelector);
 
         XMLDSigSignatureType dSign = new XMLDSigSignatureType();
@@ -89,6 +93,10 @@ public class QueueXml extends AbstractXmlBuilder {
         MessageTypeSelector typeSelector = new MessageTypeSelector();
         typeSelector.setId(this.signValues.getReferenceId());
         typeSelector.setTimestamp(Utils.getXMLGregorianCalendarNow());
+        if (settings.options.rootElement != null && settings.options.namespace != null) {
+            typeSelector.setRootElementLocalName(settings.options.rootElement);
+            typeSelector.setNamespaceURI(settings.options.namespace);
+        }
         getRes.setMessageTypeSelector(typeSelector);
 
         XMLDSigSignatureType dSign = new XMLDSigSignatureType();

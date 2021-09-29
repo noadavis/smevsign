@@ -16,4 +16,7 @@ public class SettingsOptions {
     public String zipName = null;
     @SerializedName(value = "ftp_upload")
     public boolean ftpUpload = true;
+    @SerializedName(value = "root_element")
+    public String rootElement = null;
+    public String namespace = null;
 }
