@@ -17,4 +17,20 @@
     <servlet-name>signServlet</servlet-name>
     <url-pattern>/api/sign</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <servlet-name>containersServlet</servlet-name>
+    <servlet-class>smevsign.api.Containers</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>containersServlet</servlet-name>
+    <url-pattern>/api/containers</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>reloadconfigServlet</servlet-name>
+    <servlet-class>smevsign.api.ReloadConfig</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>reloadconfigServlet</servlet-name>
+    <url-pattern>/api/reloadconfig</url-pattern>
+  </servlet-mapping>
 </web-app>
