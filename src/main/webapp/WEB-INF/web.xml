@@ -1,0 +1,20 @@
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+         version="2.4">
+  <request-character-encoding>UTF-8</request-character-encoding>
+  <listener>
+    <listener-class>
+      smevsign.Deployer
+    </listener-class>
+  </listener>
+  <display-name>Archetype Created Web Application</display-name>
+  <servlet>
+    <servlet-name>signServlet</servlet-name>
+    <servlet-class>smevsign.api.Api</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>signServlet</servlet-name>
+    <url-pattern>/api/sign</url-pattern>
+  </servlet-mapping>
+</web-app>
