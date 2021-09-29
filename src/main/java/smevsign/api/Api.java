@@ -1,5 +1,6 @@
 package smevsign.api;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
@@ -50,13 +51,17 @@ public class Api extends HttpServlet {
         if (!jsonInput.isError()) {
             ContainerConfig container = getContainerConfigByAlias(settings.getSignAlias());
             if (container != null) {
-                //"sign_xml", "sign_file", "sign_string", "queue_xml", "ack_xml"
+                //"sign_xml", "sign_file", "sign_string", "queue_xml", "ack_xml", "digest"
                 switch (settings.getRequestType()) {
                     case "sign_xml":
                         switch (settings.getXmlScheme()) {
                             case "1.1":
-                                smevsign.xml.v1_1.ServiceXml srvXml = new smevsign.xml.v1_1.ServiceXml(settings, container, debug);
-                                xml = getXmlFromBuilder(srvXml, serviceAnswer);
+                                smevsign.xml.v1_1.ServiceXml srvXml = new smevsign.xml.v1_1.ServiceXml(settings, container, config.getRegisteredAlgorithms(), debug);
+                                if ("digest".equals(settings.getSignType())) {
+                                    serviceAnswer.digest = srvXml.getDigests();
+                                } else {
+                                    xml = getXmlFromBuilder(srvXml, serviceAnswer);
+                                }
                                 break;
                             case "1.2":
                                 setError("sign_xml 1.2 in development", serviceAnswer);
@@ -123,17 +128,17 @@ public class Api extends HttpServlet {
             serviceAnswer.serviceAnswer = Base64.encodeBase64String(
                     addSoap(xml).getBytes(StandardCharsets.UTF_8)
             );
+        } else if (serviceAnswer.isDigestExist()) {
+            //pass
         } else if (!serviceAnswer.error) {
             setError("unknown error: xml is null", serviceAnswer);
         }
 
 
-        if (serviceAnswer.error) {
-            res.setStatus(400);
-        } else {
-            res.setStatus(200);
-        }
-
+        res.setStatus(200);
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, Content-Type");
+        res.setHeader("Access-Control-Max-Age", "86400");
         res.setContentType("application/json; charset=UTF-8");
         res.setCharacterEncoding("UTF-8");
         res.getWriter().print(
@@ -167,9 +172,12 @@ public class Api extends HttpServlet {
         JsonObject jObj = new JsonObject();
         jObj.addProperty("error", serviceAnswer.error);
         jObj.addProperty("error_description", serviceAnswer.errorDescription);
-        jObj.addProperty("data", "");
-        jObj.addProperty("signature", "");
+        //jObj.addProperty("data", "");
+        //jObj.addProperty("signature", "");
         jObj.addProperty("full_xml", serviceAnswer.serviceAnswer);
+        if (serviceAnswer.isDigestExist()) {
+            jObj.add("digest", new Gson().toJsonTree(serviceAnswer.digest));
+        }
         return jObj.toString();
     }
 
@@ -194,6 +202,9 @@ public class Api extends HttpServlet {
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, Content-Type");
+        res.setHeader("Access-Control-Max-Age", "86400");
         res.setContentType("application/json; charset=UTF-8");
         res.setCharacterEncoding("UTF-8");
         res.setStatus(200);

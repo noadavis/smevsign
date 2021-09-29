@@ -4,14 +4,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tika.Tika;
 import org.w3c.dom.Element;
-import smevsign.cryptopro.SignFile;
-import smevsign.cryptopro.SignValues;
-import smevsign.cryptopro.SignXml;
+import smevsign.cryptopro.*;
 import smevsign.smev.Utils;
 import smevsign.smev.signature.Signature;
 import smevsign.smev.v1_1.*;
 import smevsign.support.AttachmentInfo;
 import smevsign.support.ContainerConfig;
+import smevsign.support.DigestValue;
 import smevsign.support.Settings;
 import smevsign.xml.AbstractXmlBuilder;
 
@@ -21,6 +20,8 @@ import jakarta.activation.FileDataSource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ServiceXml extends AbstractXmlBuilder {
@@ -30,16 +31,18 @@ public class ServiceXml extends AbstractXmlBuilder {
     private SignValues signValues = new SignValues();
     private final boolean debug;
     private final ContainerConfig container;
+    private final List<String> algorithmTypes;
 
-    public ServiceXml(Settings jsonInputSettings, ContainerConfig container, boolean debug) {
+    public ServiceXml(Settings jsonInputSettings, ContainerConfig container, List<String> algorithmTypes, boolean debug) {
         this.settings = jsonInputSettings;
         this.container = container;
         this.debug = debug;
+        this.algorithmTypes = algorithmTypes;
 
         createServiceXml();
     }
 
-    public void createServiceXml() {
+    private void createServiceXml() {
         if ("create".equals(this.settings.getSignType())) {
 
             if ("SendRequestRequest".equals(this.settings.getDataType())) {
@@ -60,11 +63,30 @@ public class ServiceXml extends AbstractXmlBuilder {
                 setError("[SIGN SERVICEXML] unknown data type", log);
             }
 
+        } else if ("digest".equals(this.settings.getSignType())) {
+
+            getDigest(this.settings.getData());
+
         } else {
             setError("[CREATESERVICEXML] unknown sign type", log);
         }
     }
 
+    private void getDigest(String serviceXml) {
+        if (this.algorithmTypes == null) {
+            setError("[SERVICEXML GETDIGEST] sign algorithms not set in config.json", log);
+            return;
+        }
+        List<DigestValue> digests = new ArrayList<DigestValue>();
+        SignXml signXml = new SignXml(this.debug, null);
+        for (String algorithm: algorithmTypes) {
+            DigestValue digestValue = signXml.getDigest(serviceXml, algorithm);
+            if (digestValue != null) {
+                digests.add(digestValue);
+            }
+        }
+        setDigests(digests);
+    }
 
     //ЗАПРОС [Ф] ПЕРЕПОДПИСАНИЕ
     private void signSendRequestRequest(String serviceXml) {
@@ -72,7 +94,7 @@ public class ServiceXml extends AbstractXmlBuilder {
         try {
             serv = (SendRequestRequest) Utils.convertXmlToJAXBObject(serviceXml, "smevsign.smev.v1_1.SendRequestRequest");
         } catch (Exception e) {
-            setError("cast to SendRequestRequest: " + e.getMessage(), log);
+            setError("[SERVICEXML SENDREQUESTREQUEST] cast to SendRequestRequest: " + e.getMessage(), log);
             return;
         }
         if (serv != null) {
@@ -138,7 +160,7 @@ public class ServiceXml extends AbstractXmlBuilder {
 
 
     //ЗАПРОС [Ф] СОЗДАНИЕ
-    public void createSendRequestRequest() {
+    private void createSendRequestRequest() {
         this.signValues.setReferenceId("SenderProvidedRequestDataId");
         this.signValues.setElementNs(
                 "SenderProvidedRequestData",
@@ -171,6 +193,18 @@ public class ServiceXml extends AbstractXmlBuilder {
         }
         msgContent.setAny(any);
         reqData.setMessagePrimaryContent(msgContent);
+
+        //personalSignature
+        if (this.settings.personalSign != null) {
+            XMLDSigSignatureType personalSignature = new PersonalSignature().getPersonSignature(
+                this.settings.personalSign, any
+            );
+            if (personalSignature == null) {
+                setError("[BUILD SENDREQUESTREQUEST] personal signature not created", log);
+                return;
+            }
+            reqData.setPersonalSignature(personalSignature);
+        }
 
         //files
         List<AttachmentInfo> files = settings.getFiles();

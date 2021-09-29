@@ -13,9 +13,12 @@ import smevsign.smev.signature.SignedInfo;
 import smevsign.support.ContainerConfig;
 
 import jakarta.xml.bind.JAXB;
+import smevsign.support.DigestValue;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMResult;
+import java.security.NoSuchAlgorithmException;
 
 public class SignXml {
     
@@ -49,6 +52,60 @@ public class SignXml {
         return null;
     }
 
+    public DigestValue getDigest(String node, String algorithm) {
+        CryptoAlgorithm cryptoAlgorithm = null;
+        try {
+            cryptoAlgorithm = CryptoAlgorithm.getCryptoAlgorithm(algorithm);
+        } catch (NoSuchAlgorithmException e) {
+            //
+        }
+        if (cryptoAlgorithm == null) {
+            log.error("[GETDIGEST] cryptoAlgorithm is null");
+            return null;
+        }
+        XmlNormalizer transform = new XmlNormalizer(this.debug);
+        byte[] normalizedTargetNode = transform.makeSmevTransform(node);
+
+        byte[] nodeDigest = nodeDigest(normalizedTargetNode, cryptoAlgorithm.digestAlgorithm.name, "DIGEST");
+
+        SignedInfo signedInfo = new SignedInfo(cryptoAlgorithm.signatureMethod);
+        signedInfo.setReference("PERSONAL_SIGNATURE", nodeDigest, cryptoAlgorithm.digestMethod);
+
+        Node signedInfoNode = Utils.getElementFromClass(signedInfo);
+        byte[] normalizedSignedInfoNode = transform.makeC14nTransform(signedInfoNode);
+        if (normalizedSignedInfoNode == null) {
+            log.error("[GETDIGEST] normalizedSignedInfoNode is null");
+            return null;
+        }
+        if (this.debug) {
+            log.info(new String(normalizedSignedInfoNode));
+        }
+        byte[] signedInfoDigest = nodeDigest(normalizedSignedInfoNode, cryptoAlgorithm.digestAlgorithm.name, "DIGEST");
+
+        return new DigestValue(algorithm, nodeDigest, signedInfoDigest);
+    }
+
+    private byte[] nodeDigest(byte[] normalizedTargetNode, String digestAlgorithm, String operationType) {
+        if (normalizedTargetNode == null) {
+            log.error(String.format("[%s] normalizedTargetNode is null", operationType));
+            return null;
+        }
+        if (this.debug) {
+            log.info(new String(normalizedTargetNode));
+        }
+        //calculate digest
+        Digest digest = new Digest();
+        byte[] digestValue = digest.digest(normalizedTargetNode, digestAlgorithm);
+        if (digestValue == null) {
+            log.error(String.format("[%s] digestValue is null", operationType));
+            return null;
+        }
+        if (this.debug) {
+            log.info("digest: " + Base64.encodeBase64String(digestValue));
+        }
+        return digestValue;
+    }
+
     public Signature sign(Object serviceRequest, SignValues signValues) {
         //get container content
         ContainerService cs = new ContainerService(container.alias, container.password);
@@ -64,29 +121,15 @@ public class SignXml {
         signature.setSignedInfo(signedInfo);
 
         //get xml normalizer
-        XmlNormalizer transform = new XmlNormalizer();
+        XmlNormalizer transform = new XmlNormalizer(this.debug);
 
         //transform node for digest
         byte[] normalizedTargetNode = normalizeRequest(
                     serviceRequest, transform, signValues.getNamespace(), signValues.getElement()
         );
-        if (normalizedTargetNode == null) {
-            log.error("[SIGN] normalizedTargetNode is null");
-            return null;
-        }
-        if (this.debug) {
-            log.info(new String(normalizedTargetNode));
-        }
-
-        //calculate digest
-        Digest digest = new Digest();
-        byte[] digestValue = digest.digest(normalizedTargetNode, cs.getCryptoAlgorithm().digestAlgorithm.name);
+        byte[] digestValue = nodeDigest(normalizedTargetNode, cs.getCryptoAlgorithm().digestAlgorithm.name, "SIGN");
         if (digestValue == null) {
-            log.error("[SIGN] digestValue is null");
             return null;
-        }
-        if (this.debug) {
-            log.info("digest: " + Base64.encodeBase64String(digestValue));
         }
 
         signedInfo.setReference(signValues.getReferenceId(), digestValue, cs.getDigestMethod());

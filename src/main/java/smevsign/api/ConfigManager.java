@@ -19,6 +19,9 @@ public class ConfigManager {
     public boolean getDebug() {
         return jsonConfig.debug;
     }
+    public List<String> getRegisteredAlgorithms() {
+        return jsonConfig.algorithms;
+    }
     JsonConfig jsonConfig = null;
     public static ConfigManager instance;
     public static ConfigManager getInstance() {

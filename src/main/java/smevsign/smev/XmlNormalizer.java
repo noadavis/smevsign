@@ -55,6 +55,7 @@ import org.xml.sax.SAXException;
  */
 
 public class XmlNormalizer extends TransformSpi {
+    private boolean debug = false;
 
     public static void setNsPrefix(String nsPrefix) {
         NS_PREFIX = nsPrefix;
@@ -97,11 +98,12 @@ public class XmlNormalizer extends TransformSpi {
                 }
             };
 
-    public XmlNormalizer() {
+    public XmlNormalizer(boolean debug) {
         //init apache xml library
         if (!org.apache.xml.security.Init.isInitialized()) {
             org.apache.xml.security.Init.init();
         }
+        this.debug = debug;
     }
 
     @Override
@@ -146,7 +148,14 @@ public class XmlNormalizer extends TransformSpi {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
         try {
             process(inputStream, outputStream);
-            return outputStream.toByteArray();
+            if (this.debug) {
+                byte[] out = outputStream.toByteArray();
+                System.out.println("[makeSmevTransform] normalized xml:");
+                System.out.println(new String(out));
+                return out;
+            } else {
+                return outputStream.toByteArray();
+            }
         } catch (TransformationException e) {
             e.printStackTrace();
         }
