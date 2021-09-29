@@ -5,13 +5,13 @@
 // Generated on: 2021.03.06 at 06:29:21 AM MSK 
 //
 
-@javax.xml.bind.annotation.XmlSchema(
+@jakarta.xml.bind.annotation.XmlSchema(
         namespace = "urn://x-artefacts-smev-gov-ru/services/message-exchange/types/1.1",
         xmlns = {
-                @javax.xml.bind.annotation.XmlNs(
+                @jakarta.xml.bind.annotation.XmlNs(
                         prefix = "ns", namespaceURI = "urn://x-artefacts-smev-gov-ru/services/message-exchange/types/1.1"
                 )
         },
-        elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED
+        elementFormDefault = jakarta.xml.bind.annotation.XmlNsForm.QUALIFIED
 )
 package smevsign.smev.v1_1;

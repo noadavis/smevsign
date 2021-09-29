@@ -5,13 +5,13 @@
  *     
  * 
  */
-@javax.xml.bind.annotation.XmlSchema(
+@jakarta.xml.bind.annotation.XmlSchema(
         namespace = "http://www.w3.org/2000/09/xmldsig#",
         xmlns = {
-                @javax.xml.bind.annotation.XmlNs(
+                @jakarta.xml.bind.annotation.XmlNs(
                         prefix = "ds", namespaceURI = "http://www.w3.org/2000/09/xmldsig#"
                 )
         },
-        elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED
+        elementFormDefault = jakarta.xml.bind.annotation.XmlNsForm.QUALIFIED
 )
 package smevsign.smev.signature;

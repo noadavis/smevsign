@@ -1,7 +1,7 @@
 ### SMEV3 CRYPTOPRO JCP GOST2012
 
 Пример создания и подписи xml для работы с смэв3, пример подписи файла подписью гост2012
-> OpenJdk 11, Tomcat 9, CryptoPro JCP 2.0.40132-A
+> OpenJdk 11, Tomcat 10, CryptoPro JCP 2.0.40132-A
 
 Реализация:
 > Подпись xml: [src/main/java/smevsign/cryptopro/SignXml.java](src/main/java/smevsign/cryptopro/SignXml.java)
@@ -97,9 +97,9 @@ $ sudo apt install openjdk-11-jdk
 
 # Устанавливаем apache tomcat 9
 $ cd ~
-$ wget https://apache-mirror.rbc.ru/pub/apache/tomcat/tomcat-9/v9.0.44/bin/apache-tomcat-9.0.44.zip
-$ unzip apache-tomcat-9.0.44.zip
-$ mv apache-tomcat-9.0.44 tomcat
+$ wget https://apache-mirror.rbc.ru/pub/apache/tomcat/tomcat-10/v10.0.6/bin/apache-tomcat-10.0.6.zip
+$ unzip apache-tomcat-10.0.6.zip
+$ mv apache-tomcat-10.0.6 tomcat
 $ chmod +x ~/tomcat/bin/catalina.sh
 ```
 
@@ -110,6 +110,13 @@ $ nano ~/tomcat/conf/tomcat-users.xml
 	<role rolename="manager-gui"/>
 	<role rolename="manager-script"/>
 	<user username="dev" password="qwe" roles="manager-script,manager-gui,tomcat"/>
+```
+
+### Разрешаем доступ к панели управления tomcat со всех ip
+```bash
+$ nano ~/tomcat/webapps/manager/META-INF/context.xml
+Коментируем строку:
+	<Valve className="org.apache.catalina.valves.RemoteAddrValve" allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" />
 ```
 
 ### Установка сервиса в tomcat

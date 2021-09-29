@@ -12,7 +12,7 @@ import smevsign.smev.signature.Signature;
 import smevsign.smev.signature.SignedInfo;
 import smevsign.support.ContainerConfig;
 
-import javax.xml.bind.JAXB;
+import jakarta.xml.bind.JAXB;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMResult;

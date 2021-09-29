@@ -4,10 +4,10 @@ package smevsign.smev.signature;
 import org.apache.commons.codec.binary.Base64;
 import smevsign.cryptopro.CryptoAlgorithm;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.annotation.*;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.annotation.*;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;

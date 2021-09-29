@@ -3,7 +3,7 @@ package smevsign.support;
 import com.google.gson.*;
 import org.apache.commons.codec.binary.Base64;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 
