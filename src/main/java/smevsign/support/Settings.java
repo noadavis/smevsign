@@ -15,6 +15,8 @@ public class Settings {
     public String signAlias = null;
     public SettingsOptions options = new SettingsOptions();
     public List<AttachmentInfo> files = null;
+    @SerializedName(value = "personal_sign")
+    public PersonalSign personalSign = new PersonalSign();
 
     public String getRequestType() {
         return requestType;

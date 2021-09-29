@@ -28,6 +28,10 @@ public class Signature {
         this.signatureValue = Base64.encodeBase64String(signatureValue);
     }
 
+    public void setSignatureValueByString(String signatureValue){
+        this.signatureValue = signatureValue;
+    }
+
     public void setCertificate(X509Certificate certificate) {
         keyInfo.x509Data.setCertificate(certificate);
         keyInfo.x509Data.setSubjectName(certificate.getSubjectDN().toString());

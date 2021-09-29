@@ -63,6 +63,9 @@ public class JsonInput {
                         setError("content id for file not set");
                     }
                 }
+                if ("".equals(settings.personalSign.signatureValue)) {
+                    settings.personalSign = null;
+                }
                 break;
             case "queue_xml":
                 //todo create queue xml checks
