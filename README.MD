@@ -1,7 +1,10 @@
-### SMEV3 CRYPTOPRO JCP GOST2012
+### SMEV3 CRYPTOPRO JCP OPENJDK GOST2012
 
 Пример создания и подписи xml для работы с смэв3, пример подписи файла подписью гост2012
-> OpenJdk 11, Tomcat 10, CryptoPro JCP 2.0.40132-A
+> OpenJdk 11 | OpenJdk 17, Tomcat 10, CryptoPro JCP 2.0.40132-A
+
+[АПИ: API.MD](API.MD)
+[ВЕБ КЛИЕНТ: smevsign-web](https://github.com/noadavis/smevsign-web)
 
 Реализация:
 > Подпись xml: [src/main/java/smevsign/cryptopro/SignXml.java](src/main/java/smevsign/cryptopro/SignXml.java)
