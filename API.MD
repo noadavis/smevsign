@@ -15,7 +15,7 @@ sign_type: [create, sign]
 - create: создание и подписание xml
 - sign: переподписание существующей xml
 
-создание xml из messageprimarycontent
+####создание xml из messageprimarycontent
 ```sh
 { 
     "request_type": "sign_xml", 
@@ -28,7 +28,7 @@ sign_type: [create, sign]
 }
 ```
 
-подписание готового xml
+####подписание готового xml
 ```sh
 { 
     "request_type": "sign_xml", 
@@ -40,7 +40,7 @@ sign_type: [create, sign]
 }
 ```
 
-создание xml со ссылками на фтп
+####создание xml со ссылками на фтп
 ```sh
 {
     "request_type": "sign_xml",
@@ -69,7 +69,7 @@ sign_type: [create, sign]
 - file_path: директория с файлом [одна и таже для всех фалов]
 - file_name: имя файла находящегося в file_path
 
-создание xml с вложенными в xml файлами
+####создание xml с вложенными в xml файлами
 ```sh
 {
     "request_type": "sign_xml",
@@ -98,8 +98,24 @@ sign_type: [create, sign]
 - file_path: директория с файлом [одна и таже для всех фалов]
 - file_name: имя файла находящегося в file_path
 
-создание xml с пользовательской подписью
-todo
+####создание xml с пользовательской подписью
+```sh
+{
+    "request_type": "sign_xml",
+    "data": "PHRuczpET0hGTE5BUmVxdWVzdCB4bWxuczp0bnM9InVybjovL3gtYXJ0ZWZhY3RzLWZucy1kb2hmbG5hL3Jvb3QvMjYwLTE4LzQuMC4xIiBJZD0iUEVSU09OQUxfU0lHTkFUVVJFIiDQmNC00JfQsNC/0YDQvtGBPSIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDEiINCe0YLRh9C10YLQk9C+0LQ9IjIwMTUiPjx0bnM60KHQstCk0Jsg0JTQsNGC0LDQoNC+0LbQtD0iMTk4MC0wMS0wMSIg0JjQndCd0KTQmz0iMTAwMDAwMDAwMDc0IiDQodCd0JjQm9ChPSIwMDAwMDAwMDAwMCI+PHRuczrQpNCY0J7QpNCbIEZhbWlseU5hbWU9ItCY0JLQkNCd0J7QkiIgRmlyc3ROYW1lPSLQmNCS0JDQnSIgUGF0cm9ueW1pYz0i0JjQktCQ0J3QntCS0JjQpyIvPjx0bnM60KPQtNCb0LjRh9C9IERvY3VtZW50Q29kZT0iMjEiIFNlcmllc051bWJlcj0iMDAwMCAwMDAwMDAiLz48L3RuczrQodCy0KTQmz48L3RuczpET0hGTE5BUmVxdWVzdD4=",
+    "options": { 
+        "data_type": "SendRequestRequest", 
+        "sign_type": "create",
+        "uuid": "11111111-2222-3333-4444-555555555555"
+    }, 
+    "personal_sign": { 
+        "digest_value": "mc23TcA/+g7PFpI35N6J54RLsZM8HptyobXTUlt/cvQ=", 
+        "certificate": "base64 exported certificate", 
+        "algorithm": "GOST3410_2012_256",
+        "signature_value": "ehWpowYKUYW142o0KK75KKQ/MX7t23sWl4euZGDjSRzsRpBH2CAe9nDZPp1Qc10tJw2GOJtv6XVbCeKrxuaGLQ=="
+    }
+}
+```
 
 ### 2 [request_type - queue_xml]
 data_type: [GetResponseRequest, GetRequestRequest]
@@ -150,5 +166,18 @@ data_type: [GetResponseRequest, GetRequestRequest]
 - file_name: имя файла находящегося в file_path
 
 ### 5 [request_type - digest]
-расчет дайджеста для пользовательской подписи
-todo
+####расчет дайджеста для пользовательской подписи
+```sh
+{ 
+    "request_type": "sign_xml", 
+    "data": "PHRuczpET0hGTE5BUmVxdWVzdCB4bWxuczp0bnM9InVybjovL3gtYXJ0ZWZhY3RzLWZucy1kb2hmbG5hL3Jvb3QvMjYwLTE4LzQuMC4xIiBJZD0iUEVSU09OQUxfU0lHTkFUVVJFIiDQmNC00JfQsNC/0YDQvtGBPSIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDEiINCe0YLRh9C10YLQk9C+0LQ9IjIwMTUiPjx0bnM60KHQstCk0Jsg0JTQsNGC0LDQoNC+0LbQtD0iMTk4MC0wMS0wMSIg0JjQndCd0KTQmz0iMTAwMDAwMDAwMDc0IiDQodCd0JjQm9ChPSIwMDAwMDAwMDAwMCI+PHRuczrQpNCY0J7QpNCbIEZhbWlseU5hbWU9ItCY0JLQkNCd0J7QkiIgRmlyc3ROYW1lPSLQmNCS0JDQnSIgUGF0cm9ueW1pYz0i0JjQktCQ0J3QntCS0JjQpyIvPjx0bnM60KPQtNCb0LjRh9C9IERvY3VtZW50Q29kZT0iMjEiIFNlcmllc051bWJlcj0iMDAwMCAwMDAwMDAiLz48L3RuczrQodCy0KTQmz48L3RuczpET0hGTE5BUmVxdWVzdD4=", 
+    "options": { 
+        "data_type": "SendRequestRequest", 
+        "sign_type": "digest"
+    }
+}
+```
+возвращает массив из 3 значений, массив для каждого известного метода подписания (методы подписания задаются в config.json):
+- algorithm: алгоритм подписания
+- digest: хэш который необходимо вернуть в smevsign на этап формирования xml
+- signed_info: хэш от нормализованного узла <SignedInfo> который необходимо подписать пользовательской подписью

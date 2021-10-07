@@ -30,14 +30,20 @@ $ ~/tomcat/bin/catalina.sh start
 #Подпись, создание xml
 {
   "request_type": "", 
-  "data": "", 
+  "data": "base64value", 
   "sign_alias": "",
   "options": {
     "data_type": "",
     "sign_type": "",
-    "uuid": "",
+    "uuid": "uuid",
     "xml_scheme": "1.1",
     "ftp_upload": true
+  },
+  "personal_sign": { 
+    "digest_value": "base64value", 
+    "certificate": "base64value", 
+    "algorithm": "signature_algorithm",
+    "signature_value": "base64value"
   },
   "files": [ 
     { 
@@ -163,6 +169,9 @@ XMLDSigRI.jar
         "alias": "mycontainername",
         "containers": [
                 {"alias": "mycontainername", "password": "123456"}
+        ],
+        "algorithms": [
+                "GOST3410_2012_256", "GOST3410_2012_512"
         ]
 }
 ```
