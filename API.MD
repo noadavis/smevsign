@@ -15,7 +15,7 @@ sign_type: [create, sign]
 - create: создание и подписание xml
 - sign: переподписание существующей xml
 
-####создание xml из messageprimarycontent
+#### создание xml из messageprimarycontent
 ```sh
 { 
     "request_type": "sign_xml", 
@@ -28,7 +28,7 @@ sign_type: [create, sign]
 }
 ```
 
-####подписание готового xml
+#### подписание готового xml
 ```sh
 { 
     "request_type": "sign_xml", 
@@ -40,7 +40,7 @@ sign_type: [create, sign]
 }
 ```
 
-####создание xml со ссылками на фтп
+#### создание xml с ссылками на фтп
 ```sh
 {
     "request_type": "sign_xml",
@@ -69,7 +69,7 @@ sign_type: [create, sign]
 - file_path: директория с файлом [одна и таже для всех фалов]
 - file_name: имя файла находящегося в file_path
 
-####создание xml с вложенными в xml файлами
+#### создание xml с вложенными в xml файлами
 ```sh
 {
     "request_type": "sign_xml",
@@ -98,7 +98,7 @@ sign_type: [create, sign]
 - file_path: директория с файлом [одна и таже для всех фалов]
 - file_name: имя файла находящегося в file_path
 
-####создание xml с пользовательской подписью
+#### создание xml с пользовательской подписью
 ```sh
 {
     "request_type": "sign_xml",
@@ -166,7 +166,7 @@ data_type: [GetResponseRequest, GetRequestRequest]
 - file_name: имя файла находящегося в file_path
 
 ### 5 [request_type - digest]
-####расчет дайджеста для пользовательской подписи
+#### расчет дайджеста для пользовательской подписи
 ```sh
 { 
     "request_type": "sign_xml", 
@@ -181,3 +181,16 @@ data_type: [GetResponseRequest, GetRequestRequest]
 - algorithm: алгоритм подписания
 - digest: хэш который необходимо вернуть в smevsign на этап формирования xml
 - signed_info: хэш от нормализованного узла <SignedInfo> который необходимо подписать пользовательской подписью
+
+### 6 [request_type - sign_string]
+#### подпись строки
+```sh
+{ 
+    "request_type": "sign_string", 
+    "data": "c3RyaW5n", 
+    "options": { 
+        "url_safe": true
+    }
+}
+```
+возвращает подписанную строку в формате pkcs7, при "url_safe" = true подписанное значение можно использовать в oauth2 авторизации ЕСИА

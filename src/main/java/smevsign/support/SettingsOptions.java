@@ -19,4 +19,6 @@ public class SettingsOptions {
     @SerializedName(value = "root_element")
     public String rootElement = null;
     public String namespace = null;
+    @SerializedName(value = "url_safe")
+    public boolean urlSafe = false;
 }

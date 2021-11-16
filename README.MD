@@ -37,7 +37,8 @@ $ ~/tomcat/bin/catalina.sh start
     "sign_type": "",
     "uuid": "uuid",
     "xml_scheme": "1.1",
-    "ftp_upload": true
+    "ftp_upload": true,
+	"url_safe": false
   },
   "personal_sign": { 
     "digest_value": "base64value", 
@@ -80,7 +81,7 @@ $ ~/tomcat/bin/catalina.sh start
 ```
 ```bash
 sign_alias: идентификатор подписи из ~/config.json, указывать не обязательно
-request_type: sign_xml / sign_file / queue_xml / ack_xml
+request_type: sign_xml / sign_file / queue_xml / ack_xml / sign_string
 xml_scheme: 1.1 / 1.2 / 1.3, по умолчанию 1.1
 data_type: GetRequestRequest / GetResponseRequest / SendRequestRequest / SendResponseRequest / AckRequest / AckResponse
 sign_type: create / sign
@@ -90,6 +91,7 @@ signature_detached: прикрепленная / открепленная под
 ftp_upload: загрузка прикрепленных файлов на фтп, или в xml [true / false]
 ftp_path: фтп директория загрузки, только для ftp_upload - true
 content_id: идентификатор вложения, только для ftp_upload - false
+url_safe: использовать base64 url_safe для результата, только для request_type: sign_string
 ```
 Примеры запросов к сервису [api.txt](api.txt)
 
@@ -105,7 +107,7 @@ $ apt upgrade
 # Устанавливаем openjdk 11
 $ sudo apt install openjdk-11-jdk
 
-# Устанавливаем apache tomcat 9
+# Устанавливаем apache tomcat 10
 $ cd ~
 $ wget https://apache-mirror.rbc.ru/pub/apache/tomcat/tomcat-10/v10.0.6/bin/apache-tomcat-10.0.6.zip
 $ unzip apache-tomcat-10.0.6.zip
