@@ -77,6 +77,9 @@ public class JsonInput {
                     }
                 }
                 break;
+            case "sign_string":
+                //todo create sign string checks
+                break;
             case "sign_file":
                 //todo create sign file checks
                 break;

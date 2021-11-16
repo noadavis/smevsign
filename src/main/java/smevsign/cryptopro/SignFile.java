@@ -92,8 +92,8 @@ public class SignFile extends AbstractXmlBuilder {
             } catch (IOException e) {
                 setError(e.getMessage(), log);
             }
-            if (!getError()) {
-                setXml("signed");
+            if (!isError()) {
+                setValue("signed");
             }
         }
     }

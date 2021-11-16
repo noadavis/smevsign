@@ -13,8 +13,9 @@ import smevsign.smev.v1_3.XMLDSigSignatureType;
 import smevsign.support.ContainerConfig;
 import smevsign.support.Settings;
 import smevsign.xml.AbstractXmlBuilder;
+import smevsign.xml.Smev3Queue;
 
-public class QueueXml extends AbstractXmlBuilder {
+public class QueueXml extends AbstractXmlBuilder implements Smev3Queue {
     final private String className = this.getClass().getSimpleName();
     Log log = LogFactory.getLog(className);
     private final Settings settings;

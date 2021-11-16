@@ -12,8 +12,9 @@ import smevsign.smev.v1_2.XMLDSigSignatureType;
 import smevsign.support.ContainerConfig;
 import smevsign.support.Settings;
 import smevsign.xml.AbstractXmlBuilder;
+import smevsign.xml.Smev3Ack;
 
-public class AckXml extends AbstractXmlBuilder {
+public class AckXml extends AbstractXmlBuilder implements Smev3Ack {
     final private String className = this.getClass().getSimpleName();
     Log log = LogFactory.getLog(className);
     private final Settings settings;

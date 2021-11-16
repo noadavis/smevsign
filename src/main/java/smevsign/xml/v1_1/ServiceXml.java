@@ -17,14 +17,15 @@ import smevsign.xml.AbstractXmlBuilder;
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
 import jakarta.activation.FileDataSource;
+import smevsign.xml.Smev3Xml;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServiceXml extends AbstractXmlBuilder {
+public class ServiceXml extends AbstractXmlBuilder implements Smev3Xml {
     final private String className = this.getClass().getSimpleName();
     Log log = LogFactory.getLog(className);
     private final Settings settings;
@@ -42,7 +43,7 @@ public class ServiceXml extends AbstractXmlBuilder {
         createServiceXml();
     }
 
-    private void createServiceXml() {
+    public void createServiceXml() {
         if ("create".equals(this.settings.getSignType())) {
 
             if ("SendRequestRequest".equals(this.settings.getDataType())) {

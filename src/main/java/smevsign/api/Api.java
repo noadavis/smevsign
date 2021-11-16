@@ -6,16 +6,18 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import smevsign.cryptopro.SignFile;
+import smevsign.cryptopro.SignString;
 import smevsign.support.ContainerConfig;
 import smevsign.support.JsonInput;
 import smevsign.support.ServiceAnswer;
 import smevsign.support.Settings;
-import smevsign.xml.AbstractXmlBuilder;
+import smevsign.xml.*;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -30,16 +32,6 @@ public class Api extends HttpServlet {
     final private String className = this.getClass().getSimpleName();
     Log log = LogFactory.getLog(className);
     private final ConfigManager config = ConfigManager.getInstance();
-    private final boolean debug = config.getDebug();
-
-    private String getXmlFromBuilder(AbstractXmlBuilder builder, ServiceAnswer serviceAnswer) {
-        if (builder.getError()) {
-            setError(builder.getErrorDescription(), serviceAnswer);
-        } else {
-            return builder.getXml();
-        }
-        return null;
-    }
 
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         ServiceAnswer serviceAnswer = new ServiceAnswer();
@@ -51,68 +43,36 @@ public class Api extends HttpServlet {
         if (!jsonInput.isError()) {
             ContainerConfig container = getContainerConfigByAlias(settings.getSignAlias());
             if (container != null) {
-                //"sign_xml", "sign_file", "sign_string", "queue_xml", "ack_xml", "digest"
+                //"sign_xml", "sign_file", "sign_string", "queue_xml", "ack_xml", "digest", "sign_string"
                 switch (settings.getRequestType()) {
                     case "sign_xml":
-                        switch (settings.getXmlScheme()) {
-                            case "1.1":
-                                smevsign.xml.v1_1.ServiceXml srvXml = new smevsign.xml.v1_1.ServiceXml(settings, container, config.getRegisteredAlgorithms(), debug);
-                                if ("digest".equals(settings.getSignType())) {
-                                    serviceAnswer.digest = srvXml.getDigests();
-                                } else {
-                                    xml = getXmlFromBuilder(srvXml, serviceAnswer);
-                                }
-                                break;
-                            case "1.2":
-                                setError("sign_xml 1.2 in development", serviceAnswer);
-                                break;
-                            case "1.3":
-                                setError("sign_xml 1.3 in development", serviceAnswer);
-                                break;
-                            default:
-                                setError("unknown xml scheme", serviceAnswer);
-                        }
+                        Smev3Xml srv = Smev3XmlImpl.getServiceXml(settings, container, config.getRegisteredAlgorithms(), config.getDebug());
+                        if (srv == null) setError("Unknown smev scheme", serviceAnswer);
+                        else if (srv.isError()) setError(srv.getErrorDescription(), serviceAnswer);
+                        else xml = srv.getXml();
                         break;
                     case "queue_xml":
-                        switch (settings.getXmlScheme()) {
-                            case "1.1":
-                                smevsign.xml.v1_1.QueueXml queueXml1 = new smevsign.xml.v1_1.QueueXml(settings, container, debug);
-                                xml = getXmlFromBuilder(queueXml1, serviceAnswer);
-                                break;
-                            case "1.2":
-                                smevsign.xml.v1_2.QueueXml queueXml2 = new smevsign.xml.v1_2.QueueXml(settings, container, debug);
-                                xml = getXmlFromBuilder(queueXml2, serviceAnswer);
-                                break;
-                            case "1.3":
-                                smevsign.xml.v1_3.QueueXml queueXml3 = new smevsign.xml.v1_3.QueueXml(settings, container, debug);
-                                xml = getXmlFromBuilder(queueXml3, serviceAnswer);
-                                break;
-                            default:
-                                setError("unknown xml scheme", serviceAnswer);
-                        }
+                        Smev3Queue queue = Smev3QueueImpl.getQueueXml(settings, container, config.getDebug());
+                        if (queue == null) setError("Unknown smev scheme", serviceAnswer);
+                        else if (queue.isError()) setError(queue.getErrorDescription(), serviceAnswer);
+                        else xml = queue.getXml();
                         break;
                     case "ack_xml":
-                        switch (settings.getXmlScheme()) {
-                            case "1.1":
-                                smevsign.xml.v1_1.AckXml ackXml1 = new smevsign.xml.v1_1.AckXml(true, settings, container, debug);
-                                xml = getXmlFromBuilder(ackXml1, serviceAnswer);
-                                break;
-                            case "1.2":
-                                smevsign.xml.v1_2.AckXml ackXml2 = new smevsign.xml.v1_2.AckXml(true, settings, container, debug);
-                                xml = getXmlFromBuilder(ackXml2, serviceAnswer);
-                                break;
-                            case "1.3":
-                                smevsign.xml.v1_3.AckXml ackXml3 = new smevsign.xml.v1_3.AckXml(true, settings, container, debug);
-                                xml = getXmlFromBuilder(ackXml3, serviceAnswer);
-                                break;
-                            default:
-                                setError("unknown xml scheme", serviceAnswer);
-                        }
+                        Smev3Ack ack = Smev3AckImpl.getAckXml(true, settings, container, config.getDebug());
+                        if (ack == null) setError("Unknown smev scheme", serviceAnswer);
+                        else if (ack.isError()) setError(ack.getErrorDescription(), serviceAnswer);
+                        else xml = ack.getXml();
+                        break;
+                    case "sign_string":
+                        SignString signString = new SignString(settings, container);
+                        if (signString.isError()) setError(signString.getErrorDescription(), serviceAnswer);
+                        else serviceAnswer.value = signString.getValue();
                         break;
                     case "sign_file":
                         //todo: before sign with zip - delete old sig files
-                        SignFile signFile = new SignFile(settings, container, debug);
-                        xml = getXmlFromBuilder(signFile, serviceAnswer);
+                        SignFile signFile = new SignFile(settings, container, config.getDebug());
+                        if (signFile.isError()) setError(signFile.getErrorDescription(), serviceAnswer);
+                        else serviceAnswer.value = signFile.getValue();
                         break;
                     default:
                         setError("request type unknown", serviceAnswer);
@@ -128,10 +88,12 @@ public class Api extends HttpServlet {
             serviceAnswer.serviceAnswer = Base64.encodeBase64String(
                     addSoap(xml).getBytes(StandardCharsets.UTF_8)
             );
+        } else if (serviceAnswer.isValueExist()) {
+            //pass
         } else if (serviceAnswer.isDigestExist()) {
             //pass
         } else if (!serviceAnswer.error) {
-            setError("unknown error: xml is null", serviceAnswer);
+            setError("unknown error", serviceAnswer);
         }
 
 
@@ -172,11 +134,12 @@ public class Api extends HttpServlet {
         JsonObject jObj = new JsonObject();
         jObj.addProperty("error", serviceAnswer.error);
         jObj.addProperty("error_description", serviceAnswer.errorDescription);
-        //jObj.addProperty("data", "");
-        //jObj.addProperty("signature", "");
         jObj.addProperty("full_xml", serviceAnswer.serviceAnswer);
         if (serviceAnswer.isDigestExist()) {
             jObj.add("digest", new Gson().toJsonTree(serviceAnswer.digest));
+        }
+        if (serviceAnswer.isValueExist()) {
+            jObj.addProperty("value", serviceAnswer.value);
         }
         return jObj.toString();
     }
@@ -209,6 +172,5 @@ public class Api extends HttpServlet {
         res.setCharacterEncoding("UTF-8");
         res.setStatus(200);
         res.getWriter().print(String.format("{\"name\": \"service_api\", \"answer\": \"GET answer: %s\"}", className));
-
     }
 }
