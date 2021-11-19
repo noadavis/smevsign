@@ -1,12 +1,13 @@
 ## smevsign api / создание и подпись xml для смэв3
 post запросы на адрес ip:port/api/sign
 
-request_type: тип запроса к системе [sign_xml, queue_xml, ack_xml, sign_file, digest]
+request_type: тип запроса к системе [sign_xml, queue_xml, ack_xml, sign_file, digest, sign_string]
 - sign_xml: создание xml / переподписание существующего xml
 - queue_xml: получение xml опроса очереди
 - ack_xml: получение xml подтверждени получения
 - sign_file: подпись файлов
 - digest: расчет digest хэша xml, нормализованной по алгоритму urn://smev-gov-ru/xmldsig/transform, для подписи через веб плагин по методу signhash
+- sign_string: подпись строки в фомате pkcs7
 
 в примерах используется вид сведения https://smev3.gosuslugi.ru/portal/inquirytype_one.jsp?id=82290&zone=fed&page=1&dTest=false
 
