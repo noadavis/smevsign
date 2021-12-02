@@ -49,6 +49,7 @@ public class Api extends HttpServlet {
                         Smev3Xml srv = Smev3XmlImpl.getServiceXml(settings, container, config.getRegisteredAlgorithms(), config.getDebug());
                         if (srv == null) setError("Unknown smev scheme", serviceAnswer);
                         else if (srv.isError()) setError(srv.getErrorDescription(), serviceAnswer);
+                        else if ("digest".equals(settings.getSignType())) serviceAnswer.digest = srv.getDigests();
                         else xml = srv.getXml();
                         break;
                     case "queue_xml":
