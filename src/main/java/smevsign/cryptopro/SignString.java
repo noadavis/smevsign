@@ -41,8 +41,8 @@ public class SignString extends AbstractXmlBuilder {
             byte[] pkcs7 = this.cms.createCMS(
                     data,
                     sign,
-                    this.cs.getCryptoAlgorithm().digestAlgorithm.oid,
-                    this.cs.getCryptoAlgorithm().signatureAlgorithm.oid
+                    null,
+                    false
             );
 
             if (settings.options.urlSafe) return Base64.encodeBase64URLSafeString(pkcs7);
@@ -60,7 +60,7 @@ public class SignString extends AbstractXmlBuilder {
             setError(String.format("[SIGN][%s] certificate date not valid", container.alias), log);
             return;
         }
-        this.cms = new CMS(false, cs.getCertificate());
+        this.cms = new CMS(false, cs.getCertificate(), null, this.cs.getCryptoAlgorithm());
     }
 
 }

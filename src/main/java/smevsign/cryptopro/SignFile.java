@@ -53,7 +53,7 @@ public class SignFile extends AbstractXmlBuilder {
     public void GeneratePkcs7(AttachmentInfo file, File f) {
         byte[] attachmentDigest = digest.fileDigest(f, cs.getCryptoAlgorithm().digestAlgorithm.name);
         file.digest = Base64.encodeBase64String(attachmentDigest);
-        file.pkcs7 = signFile(f, false);
+        file.pkcs7 = signFile(f, attachmentDigest);
     }
 
     private void GenerateSig() {
@@ -66,7 +66,8 @@ public class SignFile extends AbstractXmlBuilder {
                 for (AttachmentInfo file : files) {
                     File f = new File(String.format("%s%s", file.filePath, file.fileName));
                     if (f.exists()) {
-                        byte[] pkcs7 = signFile(f, true);
+                        byte[] attachmentDigest = digest.fileDigest(f, cs.getCryptoAlgorithm().digestAlgorithm.name);
+                        byte[] pkcs7 = signFile(f, attachmentDigest);
                         if (pkcs7 != null) {
                             Array.writeFile(String.format("%s.sig", f.getPath()), pkcs7);
                             signedFiles.add(new AttachmentInfo(null, file.filePath, String.format("%s.sig", file.fileName)));
@@ -98,21 +99,14 @@ public class SignFile extends AbstractXmlBuilder {
         }
     }
 
-    private byte[] signFile(File f, boolean writeSig) {
+    private byte[] signFile(File f, byte[] digest) {
         try {
-            final byte[] data = Array.readFile(f.getPath());
-            final PrivateKey key = this.cs.getPrivateKey();
-
-            final Signature signature = Signature.getInstance(this.cs.getCryptoAlgorithm().signatureAlgorithm.name, "JCP");
-            signature.initSign(key);
-            signature.update(data);
-            final byte[] sign = signature.sign();
 
             return this.cms.createCMS(
-                    data,
-                    sign,
-                    this.cs.getCryptoAlgorithm().digestAlgorithm.oid,
-                    this.cs.getCryptoAlgorithm().signatureAlgorithm.oid
+                    Array.readFile(f.getPath()),
+                    null,
+                    digest,
+                    true
             );
 
         } catch (Exception e) {
@@ -152,7 +146,7 @@ public class SignFile extends AbstractXmlBuilder {
             setError(String.format("[SIGN][%s] certificate date not valid", container.alias), log);
             return;
         }
-        this.cms = new CMS(signatureDetached, cs.getCertificate());
+        this.cms = new CMS(signatureDetached, cs.getCertificate(), cs.getPrivateKey(), cs.getCryptoAlgorithm());
     }
 
 }
