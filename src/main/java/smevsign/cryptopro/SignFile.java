@@ -35,6 +35,7 @@ public class SignFile extends AbstractXmlBuilder {
         this.settings = jsonInputSettings;
         this.container = container;
         this.debug = debug;
+        this.digest = new Digest();
 
         SignPrepare(this.settings.options.signatureDetached);
 
