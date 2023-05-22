@@ -31,7 +31,9 @@ java -cp "*" ru.CryptoPro.JCP.tools.License -first
 ### Копируем контейнер в директорию с ключами, даем права пользователю сервиса
 Итоговая директория контейнера должна быть вида /var/opt/cprocsp/keys/<логин пользователя системы>/<папка контейнера>/
 ```bash
-sudo mkdir /var/opt/cprocsp/keys/dev/
+sudo mkdir /var/opt/cprocsp/tmp -p
+sudo chmod -R 777 /var/opt/cprocsp/tmp
+sudo mkdir /var/opt/cprocsp/keys/dev/ -p
 sudo cp -r /home/dev/crypto/<CONTAINER_DIR>/ /var/opt/cprocsp/keys/dev/
 sudo chown -R dev:dev /var/opt/cprocsp/keys/dev/
 ```

@@ -104,14 +104,14 @@ url_safe: использовать base64 url_safe для результата, 
 $ apt update
 $ apt upgrade
 
-# Устанавливаем openjdk 11
-$ sudo apt install openjdk-11-jdk
+# Устанавливаем openjdk 17
+$ sudo apt install openjdk-17-jdk
 
 # Устанавливаем apache tomcat 10
 $ cd ~
-$ wget https://apache-mirror.rbc.ru/pub/apache/tomcat/tomcat-10/v10.0.6/bin/apache-tomcat-10.0.6.zip
-$ unzip apache-tomcat-10.0.6.zip
-$ mv apache-tomcat-10.0.6 tomcat
+$ wget https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.9/bin/apache-tomcat-10.1.9.zip
+$ unzip apache-tomcat-10.1.9.zip
+$ mv apache-tomcat-10.1.9 tomcat
 $ chmod +x ~/tomcat/bin/catalina.sh
 ```
 
@@ -143,7 +143,7 @@ $ ~/tomcat/bin/catalina.sh start
 ### Устанавливаем Крипто про и настраиваем подпись
 [Инструкция: CRYPTOPRO.MD](CRYPTOPRO.MD)
 
-### Копируем библиотеки jcp в: tomcat/libs и в папку smevsign/libs исходников проекта
+### Копируем библиотеки jcp в: tomcat/lib и в папку smevsign/libs исходников проекта
 ```bash
 AdES-core.jar
 ASN1P.jar
@@ -183,5 +183,5 @@ XMLDSigRI.jar
 alias tomlog='tail -f /home/dev/tomcat/logs/catalina.out'
 alias tomstart='/home/dev/tomcat/bin/catalina.sh start'
 alias tomstop='/home/dev/tomcat/bin/catalina.sh stop'
-alias tomrestart='/home/dev/tomcat/bin/catalina.sh stop && sleep 1 && /home/dev/tomcat/bin/catalina.sh start'
+alias tomrestart='/home/dev/tomcat/bin/catalina.sh stop && sleep 5 && /home/dev/tomcat/bin/catalina.sh start'
 ```
